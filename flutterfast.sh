@@ -44,6 +44,7 @@ printf "\e[1;35mFlutter Linux: \e[1;34mhttps://docs.flutter.dev/get-started/inst
 printf "\e[1;35mAndroid SDK: \e[1;34mhttps://drive.google.com/file/d/1QhSBbGOIicV4QNit7Umb4k03cm-VyQGD/view?usp=drive_link\n";
 }
 # Function to prompt user for file selection using file manager
+
 function select_file() {
   local file=$(zenity --file-selection --title="Select .tar.xz File" --file-filter="*.tar.xz" --separator="|" 2>/dev/null)
   echo "$file"
@@ -109,7 +110,7 @@ export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
 # Function to set the path variable in the .bashrc file
 function select_distro() {
   # Prompt user with options
-echo "Now Please select your preferred Linux distribution:"
+echo "Please select your preferred Linux distribution:"
 echo "1. Arch"
 echo "2. Debian"
 
@@ -119,12 +120,38 @@ read choice
 # Perform actions based on user's choice
 case $choice in
   1)
+  echo "Configuring Flutter Fast for Arch"
+  if ! command -v zenity &>/dev/null; then
+  echo "Zenity is not installed. Please install Zenity to continue."
+  sudo pacman -S zenity -y
+
+fi
+
     echo "You selected Arch. Performing Arch-specific actions..."
+
+# Prompt user to select the Flutter file again
+select_flutter_file
+# Prompt user to select the SDK file
+select_sdk
+# Prompt user to install Java OpenJDK 17
     # Actions specific to Arch Linux
     install_java_arch
     ;;
   2)
+  echo "Configuring FlutterFast for Debian"
+  if ! command -v zenity &>/dev/null; then
+  echo "Zenity is not installed.Trying to installing Zenity."
+  sudo apt-get install zenity -y
+
+fi
+
     echo "You selected Debian. Performing Debian-specific actions..."
+
+# Prompt user to select the Flutter file again
+select_flutter_file
+# Prompt user to select the SDK file
+select_sdk
+# Prompt user to install Java OpenJDK 17
     # Actions specific to Debian-based distributions
     install_java_debian
     ;;
@@ -157,12 +184,13 @@ function install_java_arch() {
 
   if [[ $choice == "y" || $choice == "Y" ]]; then
     echo "Installing Java OpenJDK 17..."
-    sudo apt-get update >/dev/null 2>&1
-    sudo apt-get install -y openjdk-17-jdk >/dev/null 2>&1 &
-    local pid=$!
-    show_animation $pid
-    wait $pid
-    echo "Java OpenJDK 17 installed!"
+    sudo pacman -Syu >/dev/null 2>&1
+    sudo pacman -S jdk17-openjdk >/dev/null 2>&1 &
+    #local pid=$!
+    #show_animation $pid
+    #wait $pid
+    java -version
+    echo "Installed Success!"
     install_linuxSDK_on_arch
   fi
 }
@@ -242,11 +270,6 @@ function start(){
 
 # Create the extraction folder if it doesn't exist
 mkdir -p "$HOME/Android"
-# Prompt user to select the Flutter file again
-select_flutter_file
-# Prompt user to select the SDK file
-select_sdk
-# Prompt user to install Java OpenJDK 17
 select_distro
 # Prompt user to set path variable
 set_path_variable
